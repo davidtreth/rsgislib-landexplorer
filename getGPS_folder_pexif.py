@@ -10,7 +10,6 @@ def run_command(command):
 cwd = os.getcwd()
 files = os.listdir(cwd)
 jpgs = [f for f in files if f[-4:].lower()=='.jpg']
-jpgs = [f for f in jpgs if f[:3]=='IMG']
 #print(jpgs)
 print("{j};{lt};{ln}".format(j='Filename',lt='Lat',ln='Lon'))
 for j in jpgs:
