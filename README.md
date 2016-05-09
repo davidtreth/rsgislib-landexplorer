@@ -40,3 +40,11 @@ By default the program creates output png files in the 'outputplots/' folder
 
 I have included some example data in the 'exampledata' folder with some images
 from my MSc course fieldtrips and a subset of a Landsat7 scene of mid-Wales.
+
+Update 09-05-16:
+there is now a wrapper script run_readLandCover.py that can do conversion to resized png files, extraction of geotags from geotagged images, and currently calls readLandCoverGRPs.py twice, once in the system context and once in miniconda (this should hopefully no longer be necessary if I've sorted out my miniconda installation...)
+
+python run_readLandCover.py -i  <coords.csv> [-s <landsat_scene>] [-u <utmzone>] [--makepng] [--extractgeo]
+
+if --makepng is used, it will resize using the script resize_and_convertpng.py to 400px width, and if --extractgeo, it will call the getGPS_folder_pexif.py script to extract the geotags from the file into <coords.csv> - which need not exist beforehand in this case
+
