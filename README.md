@@ -46,5 +46,5 @@ there is now a wrapper script run_readLandCover.py that can do conversion to res
 
 python run_readLandCover.py -i  <coords.csv> [-s <landsat_scene>] [-u <utmzone>] [--makepng] [--extractgeo]
 
-if --makepng is used, it will resize using the script resize_and_convertpng.py to 400px width, and if --extractgeo, it will call the getGPS_folder_pexif.py script to extract the geotags from the file into <coords.csv> - which need not exist beforehand in this case
+if --makepng is used, it will resize using the script resize_and_convertpng.py to 400px width, and if --extractgeo, it will call the getGPS_folder_pexif.py script to extract the geotags from the file into <coords.csv> - which need not exist beforehand in this case, but does need to be specified after the -i. 
 
