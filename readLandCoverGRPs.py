@@ -7,18 +7,23 @@ import bboxSHP
 # Import the python Argument parser
 import argparse
 import os
+import glob
 # import PIL
+from PIL import Image
 # I used PIL/Pillow to import jpgs directly without converting to png
 # however this version assumes the images have been converted to PNG
 # in a subdirectory 'png' after I had some problems with Pillow on Python3
+# though reading jpgs now works for me in PIL.Image but not in matplotlib.image
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+# import matplotlib.image as mpimg
 import numpy as np
 import errno
 
-import rsgislib
-from rsgislib import imageutils
-import subset_makePNG_optIR    
+# rsgislib imports are moved to under if LSscene:
+# so that this same script can be run with my system python installation
+# which has working shapefile stuff needed by bboxSHP but not rsgislib
+# and by conda where rsgislib works but osgeo.ogr fails in bboxSHP!
+
 
 def make_sure_path_exists(path):
     try:
@@ -166,10 +171,14 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         if not(LSscene):
             # currently, if a Landsat scene is specified,
             # don't create the shapefiles - assume they already exist
+            # a workaround for my problem with from osgeo import ogr on conda
             bboxSHP.createpointSHP(xy[0],xy[1],shpGRP,epsg)
             bboxSHP.createbboxSHP(xy[0],xy[1],3000,shp3km,epsg)
             bboxSHP.createbboxSHP(xy[0],xy[1],120,shp120m,epsg)
         if LSscene:
+                import rsgislib
+                from rsgislib import imageutils
+                import subset_makePNG_optIR    
                 # subset LS scene to shp3km and shp120m bbox
                 gdalformat = 'KEA'
                 datatype = rsgislib.TYPE_32FLOAT
@@ -211,13 +220,17 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 optPNG = outputImage[:-4]+'_RGB.png'                              
         plottitle = str(lt)+" , "+ str(ln) + " " + gridref.replace("_"," ")
         # assume files are converted to PNG in sub-folder png/
-        pngfn = "png/"+fn[:-4]+".png"
-        img=mpimg.imread(pngfn)
-        # if using PIL can read jpgs directly
-        # img=mpimg.imread(fn)        
-        imgR, imgG, imgB = img[:,:,0], img[:,:,1], img[:,:,2]
+        pngfn = glob.glob("[pP][nN][gG]/"+fn[:-4]+".[pP][nN][gG]")[0]
+        #img=mpimg.imread(pngfn)
+        img=Image.open(pngfn)
+        img.convert(mode='RGB')
+        imgArr = np.asarray(img)                
+        #if using PIL can read jpgs directly
+        #img=mpimg.imread(fn)        
+        #imgR, imgG, imgB = img[:,:,0], img[:,:,1], img[:,:,2]
+        imgR, imgG, imgB = imgArr[:,:,0], imgArr[:,:,1], imgArr[:,:,2]
         #print(img)
-        #print img.shape
+        print(imgArr.shape)
         #if img.shape[0]> img.shape[1]:
         dimens = [18,12]
         #else:
@@ -270,7 +283,10 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         if LSscene:
             # if we are using a LS scene, do the plots of that
             # visible light band combination
-            optImg = mpimg.imread(optPNG)
+            optImg = Image.open(optPNG)
+            optImg.convert(mode='RGB')
+            optImg = np.asarray(optImg)            
+            # optImg = mpimg.imread(optPNG)
             ax = plt.subplot(246)
             ax.set_title('RGB Landsat image\n{fn}'.format(fn=LSout[:12]))
             imgplot = ax.imshow(optImg)
@@ -278,7 +294,10 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             ax.plot([50],[50],color='yellow',alpha=1,marker='+',ms=1)
             ax.plot([48,48,52,52,48],[48,52,52,48,48],color='white')
             # SWIR2, NIR and Red band combination
-            IR_Img = mpimg.imread(IR_PNG)
+            #IR_Img = mpimg.imread(IR_PNG)
+            IR_Img = Image.open(IR_PNG)
+            IR_Img.convert(mode='RGB')
+            IR_Img = np.asarray(IR_Img)
             ax = plt.subplot(247)
             ax.set_title('Bands 754/743 Landsat image\n{fn}'.format(fn=LSout[:12]))
             imgplot = ax.imshow(IR_Img)
@@ -305,9 +324,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Define the argument for specifying the input file.
     parser.add_argument("-i", "--input", type=str, 
-        help="Specify the input csv file containing points.")
+                        help="Specify the input csv file containing points. These are processed into point and bounding box shapefiles, which currently only are generated if a Landsat scene is not specified, which is a workaround because my current conda installation of python doesn't do the shapefiles properly, returning an error at the point of 'from osgeo import ogr'. What I am currently doing is running once with only the file coordinates file specified, on my system python installation, and then again with the Landsat file specified with the conda python installation (which has a working RSGISLib, which my system python installation does not! ")
     parser.add_argument("-s", "--scene", type=str,
-        help="Specify the Landsat scene (currently expects projected to OSGB36)")
+                        help="Specify the Landsat scene (currently expects projected to OSGB36, unless the UTM has been specified in the -u parameter).")
     parser.add_argument("-u", "--utm", type=str,
                         help="Specify Universal Transverse Mercator zone, e.g. '30N'. Landsat images of GB are in UTM30N (EPSG:32630), or possibly 29N of 31N.")
     # Call the parser to parse the arguments.

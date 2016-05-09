@@ -9,7 +9,7 @@ def run_command(command):
     return p.communicate()
 cwd = os.getcwd()
 files = os.listdir(cwd)
-jpgs = [f for f in files if f[-4:].lower()=='.jpg']
+jpgs = [f for f in files if f[-4:].lower()=='.jpg' or f[-5:].lower()=='.jpeg']
 #print(jpgs)
 print("{j};{lt};{ln}".format(j='Filename',lt='Lat',ln='Lon'))
 for j in jpgs:
