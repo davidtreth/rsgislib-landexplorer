@@ -13,7 +13,7 @@ jpgs = [f for f in files if f[-4:].lower()=='.jpg' or f[-5:].lower()=='.jpeg']
 #print(jpgs)
 print("{j};{lt};{ln}".format(j='Filename',lt='Lat',ln='Lon'))
 for j in jpgs:
-    cmd = "getgps.py "+j
+    cmd = "python /usr/share/doc/python-pexif/examples/getgps.py "+j
     latlon = run_command(cmd)[0]
     lat = latlon.split(",")[0][1:]
     lon = latlon.split(",")[1][1:-2]

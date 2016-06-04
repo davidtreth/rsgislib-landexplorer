@@ -5,6 +5,9 @@ A set of Python scripts for data exploration based on geotagged photos,
 and (currently) Landsat images - at present certain things are hard coded so
 that it expects a Landsat 7 or 8 image. Landsat 5 should work as well.
 
+Update 040616: scripts for stacking the individual bands to an image stack are put in the stackbands_scripts/ folder
+The main program now works with Sentinel 2 images
+
 At this stage it is a big rough and ready so don't be suprised if something
 doesn't work.
 
@@ -16,7 +19,7 @@ only work on Linux.
 
 The main script is 'readLandCoverGRPs.py' which takes an input file containing
 the image filenames and their coordinates in a semicolon separated .csv,
-and optionally a Landsat image.
+and optionally a Landsat or Sentinel 2 image.
 
 I had been using Pythom Imaging Library/Pillow to read the ground reference point jpgs directly,
 but then had trouble with it after I broke something in the python packages,
@@ -42,7 +45,7 @@ I have included some example data in the 'exampledata' folder with some images
 from my MSc course fieldtrips and a subset of a Landsat7 scene of mid-Wales.
 
 Update 09-05-16:
-there is now a wrapper script run_readLandCover.py that can do conversion to resized png files, extraction of geotags from geotagged images, and currently calls readLandCoverGRPs.py twice, once in the system context and once in miniconda (this should hopefully no longer be necessary if I've sorted out my miniconda installation...)
+there is now a wrapper script run_readLandCover.py that can do conversion to resized png files, extraction of geotags from geotagged images, and currently calls readLandCoverGRPs.py twice, once without specifying the scene (to generate the shapefiles of the points and areas around them), and once with it
 
 python run_readLandCover.py -i  <coords.csv> [-s <landsat_scene>] [-u <utmzone>] [--makepng] [--extractgeo]
 

@@ -46,25 +46,25 @@ def UTMfindEPSG(zonestr):
             epsg = 32500 + int(zonestr[:-1])
         return epsg
 
-def setTickLabelsLS(ax,gridref):
+def setTickLabelsLS(ax,gridref, pixelscale=30):
     """ set the tick labels for the preview Landsat images 
     
     this assumes that we are using 3km boxes/ 100 LS pixels"""
     xt = np.arange(0,3500,500)
-    ax.set_xticks(xt/30)
-    ax.set_xlim(0,100)
-    ax.set_ylim(100,0)
+    ax.set_xticks(xt/pixelscale)
+    ax.set_xlim(0,3000/pixelscale)
+    ax.set_ylim(3000/pixelscale,0)
     print(xt)
     # tick labels as 6 figure grid refs
-    offX = int(gridref[3:6])-15    
-    lblx = xt/100+ offX
+    offX = int(gridref[3:6])-pixelscale/2    
+    lblx = pixelscale/3000. * xt+ offX
     lblx = np.int16(lblx)
     ax.set_xticklabels(lblx)
     yt = np.arange(0,3500,500)
     print(yt)
-    ax.set_yticks(yt/30)
-    offY = int(gridref[6:])-15
-    lbly = (3000-yt)/100 + offY
+    ax.set_yticks(yt/pixelscale)
+    offY = int(gridref[6:])-pixelscale/2
+    lbly = (3000-yt)*pixelscale/3000. + offY
     lbly = np.int16(lbly)
     ax.set_yticklabels(lbly)
         
@@ -188,19 +188,33 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 outputImage120m = gridref+"_120m.kea"
                 imageutils.subset(LSscene, shp3km, outputImage, gdalformat, datatype)
                 imageutils.subset(LSscene, shp120m, outputImage120m, gdalformat, datatype)
-                if LSout[:3] == 'LS7':
-                    # if this is Landsat 7
+                pixelscale = 30
+                if LSout[:3] == 'S2A' or LSout[:3] == 'S2B':
+                    # Sentinel 2A/2B
+                    S2bands = ['B1Coastal', 'B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
+                               'B8NIR842', 'B9WaterVap945', 'B10Cirrus1375', 'B11SWIR1610', 'B12SWIR2190', 'B8A865nm']
+                    S2bi = [1,2,3,4,5,6,7,8, 13, 9,10,11,12]
+                    wv = [443, 490, 560, 665, 705, 740, 783, 842, 865, 940, 1375, 1610, 2190]
+                    wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 20, 30, 90, 180]
+                    subset_makePNG_optIR.makePNG(outputImage, S2bi, S2bands)
+                    subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
+                    IR_PNG = outputImage[:-4]+'_1284.png'
+                    pixelscale = 10
+                elif LSout[:3] == 'LS7' or LSout[:3] == 'LS5':
+                    # if this is Landsat 7 or 5
                     LS7bands = ['Blue','Green','Red','NIR','SWIR1','TIR','SWIR2']
                     LS7bi = [1,2,3,4,5,6]
                     wv = [482,563,655,865,1610,2200]
                     subset_makePNG_optIR.makePNG(outputImage,LS7bi,LS7bands)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_743.png'
-                else:
+                elif LSout[:3] == 'LS8':
                     wv = [443,482,563,655,865,1610,2200]
                     subset_makePNG_optIR.makePNG(outputImage)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_754.png'
+                else:
+                    print("image {l} not Sentinel2, Landsat 5/7 or Landsat 8".format(l=LSout))
                 # the output file of subset_makePNG_optIR.getSpectrum()
                 # should probably rewrite to remove possibility of error here
                 specFile = shpGRP[:-4]+"_spec.csv"
@@ -223,6 +237,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         pngfn = glob.glob("[pP][nN][gG]/"+fn[:-4]+".[pP][nN][gG]")[0]
         #img=mpimg.imread(pngfn)
         img=Image.open(pngfn)
+        #img=Image.open(fn)
         img.convert(mode='RGB')
         imgArr = np.asarray(img)                
         #if using PIL can read jpgs directly
@@ -288,24 +303,34 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             optImg = np.asarray(optImg)            
             # optImg = mpimg.imread(optPNG)
             ax = plt.subplot(246)
-            ax.set_title('RGB Landsat image\n{fn}'.format(fn=LSout[:12]))
+            if pixelscale == 10:
+                ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:12]))
+            else:
+                ax.set_title('RGB Landsat image\n{fn}'.format(fn=LSout[:12]))
+            
             imgplot = ax.imshow(optImg)
-            setTickLabelsLS(ax,gridref)
-            ax.plot([50],[50],color='yellow',alpha=1,marker='+',ms=1)
-            ax.plot([48,48,52,52,48],[48,52,52,48,48],color='white')
+            setTickLabelsLS(ax,gridref, pixelscale)
+            ax.plot([1500/pixelscale],[1500/pixelscale],color='yellow',alpha=1,marker='+',ms=1)
+            ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
             # SWIR2, NIR and Red band combination
             #IR_Img = mpimg.imread(IR_PNG)
             IR_Img = Image.open(IR_PNG)
             IR_Img.convert(mode='RGB')
             IR_Img = np.asarray(IR_Img)
             ax = plt.subplot(247)
-            ax.set_title('Bands 754/743 Landsat image\n{fn}'.format(fn=LSout[:12]))
+            if pixelscale == 10:
+                ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:12]))
+            else:
+                ax.set_title('Bands 754/743 Landsat image\n{fn}'.format(fn=LSout[:12]))
             imgplot = ax.imshow(IR_Img)
-            setTickLabelsLS(ax,gridref)
-            ax.plot([50],[50],color='yellow',alpha=1,marker='+',ms=1)
-            ax.plot([48,48,52,52,48],[48,52,52,48,48],color='white')
+            setTickLabelsLS(ax,gridref, pixelscale)
+            ax.plot([1500/pixelscale],[1500/pixelscale],color='yellow',alpha=1,marker='+',ms=1)
+            ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
             ax = plt.subplot(248)
-            ax.set_title('Spectrum of Landsat image\nin 120m box around GRP')
+            if pixelscale == 10:
+                ax.set_title('Spectrum of Sentinel2 image\nin 120m box around GRP')
+            else:
+                ax.set_title('Spectrum of Landsat image\nin 120m box around GRP')
             ax.set_xlabel('wavelength (nm)')
             ax.set_ylabel('mean DN')
             ax.set_xticks([500,1000,1500,2000])

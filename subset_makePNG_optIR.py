@@ -70,6 +70,12 @@ def makePNG(inputStack,bands=[1,2,3,4,5,6,7],bnames=LS8bands,datatype=rsgislib.T
         RGB = [5,3,2]
         outTIFFile = inputStack[:-4] + "_743.tif"
         outPNGFile = inputStack[:-4] + "_743.png"
+    elif len(bnames) == 13:
+        # for Sentinel2 there are 13 bands
+        # and band 12 is SWIR2, 8 is broadband NIR, 4 Red
+        RGB = [11,7,3]
+        outTIFFile = inputStack[:-4] + "_1284.tif"
+        outPNGFile = inputStack[:-4] + "_1284.png"
     else:
         # ie if LS8 - this time band 7 is SWIR2, 5 NIR and 4 Red
         RGB = [6,4,3]
