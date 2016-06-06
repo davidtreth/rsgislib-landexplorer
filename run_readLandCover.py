@@ -24,6 +24,7 @@ if __name__ == "__main__":
                         help="optional argument to extract geotags from image files into input file first")
     parser.add_argument("--makepng", action="store_true",
                         help="optional argument to make reduced size pngs from any jpgs in the directory first.")
+    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected Sentinel2 image at 10m resolution with 19 bands (10 image bands).")
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     # Check that the input parameter has been specified.
@@ -33,10 +34,16 @@ if __name__ == "__main__":
         sys.exit()
     if args.utm:
         cmd1 = "python {readLpath} -i {coord} -u {utm}".format(coord=args.input, utm=args.utm, readLpath = pathto_script)
-        cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm}".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
+        if args.atmoscorr:
+            cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm} -a".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
+        else:
+            cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm}".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
     else:
         cmd1 = "python {readLpath}  -i {coord}".format(coord=args.input)
-        cmd2 = "python {readLpath}  -i {coord} -s {scene}".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
+        if args.atmoscorr:
+            cmd2 = "python {readLpath}  -i {coord} -s {scene} -a".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
+        else:
+            cmd2 = "python {readLpath}  -i {coord} -s {scene}".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
     
     if args.extractgeo:
         pexifcmd = "python {pexifc} > {coord}".format(pexifc=pathto_pexifscr, coord = args.input)

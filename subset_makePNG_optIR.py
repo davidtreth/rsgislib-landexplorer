@@ -48,8 +48,9 @@ def makePNG(inputStack,bands=[1,2,3,4,5,6,7],bnames=LS8bands,datatype=rsgislib.T
     # this is all a bit confusing with the indices, because bands start with 1
     # and arrays start with 0, and the LS7 band 6 is TIR and not expected in the
     # layerstack
-    if bnames[0] == 'Blue':
-        # ie if LS7, for LS8 it is 'Coastal'
+    if bnames[0] == 'Blue' or bnames[0] == 'B2Blue':
+        # ie if LS7 or processed Sentinel2 image
+        # for LS8 it is 'Coastal' and raw Sentinel2 'B1Coastal'
         RGB = [2,1,0]
     else:
         RGB = [3,2,1]
@@ -74,6 +75,14 @@ def makePNG(inputStack,bands=[1,2,3,4,5,6,7],bnames=LS8bands,datatype=rsgislib.T
         # for Sentinel2 there are 13 bands
         # and band 12 is SWIR2, 8 is broadband NIR, 4 Red
         RGB = [11,7,3]
+        outTIFFile = inputStack[:-4] + "_1284.tif"
+        outPNGFile = inputStack[:-4] + "_1284.png"
+    elif len(bnames) == 10:
+        # Sentinel 2 image processed to L2A in SenCor
+        # at 10m resolution
+        # in the stack
+        # 10th band is B12, 7th is B8, 3rd is B4
+        RGB = [9, 6, 2]
         outTIFFile = inputStack[:-4] + "_1284.tif"
         outPNGFile = inputStack[:-4] + "_1284.png"
     else:

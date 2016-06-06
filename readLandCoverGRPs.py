@@ -102,7 +102,7 @@ def findOSgridref(X,Y,nfig=6):
     easting, northing = int((X % 100000)/denom), int((Y % 100000)/denom)
     return gridsq, easting, northing
 
-def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplots/"):
+def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplots/", L2A=False):
     """ take the list of ground reference points and their associated image files
     and make some plots """
     # print(epsg)
@@ -191,15 +191,25 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 pixelscale = 30
                 if LSout[:3] == 'S2A' or LSout[:3] == 'S2B':
                     # Sentinel 2A/2B
-                    S2bands = ['B1Coastal', 'B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
-                               'B8NIR842', 'B9WaterVap945', 'B10Cirrus1375', 'B11SWIR1610', 'B12SWIR2190', 'B8A865nm']
-                    S2bi = [1,2,3,4,5,6,7,8, 13, 9,10,11,12]
-                    wv = [443, 490, 560, 665, 705, 740, 783, 842, 865, 940, 1375, 1610, 2190]
-                    wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 20, 30, 90, 180]
+                    if L2A:
+                        # if atmos-corrected stack produced in sencor
+                        S2bands = ['B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
+                                    'B8NIR842', 'B8A865nm', 'B11SWIR1610', 'B12SWIR2190']
+                        S2bi = [1,2,3,4,5,6, 7, 8,9, 10]
+                        wv = [490, 560, 665, 705, 740, 783, 842, 865, 1610, 2190]
+                        wv_w = [65, 35, 30, 15, 15, 20, 115, 20, 90, 180]
+                        pixelscale = 10
+                    else:
+                        S2bands = ['B1Coastal', 'B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
+                                   'B8NIR842', 'B9WaterVap945', 'B10Cirrus1375', 'B11SWIR1610', 'B12SWIR2190', 'B8A865nm']
+                        S2bi = [1,2,3,4,5,6,7,8, 13, 9,10,11,12]
+                        wv = [443, 490, 560, 665, 705, 740, 783, 842, 865, 940, 1375, 1610, 2190]
+                        wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 20, 30, 90, 180]
+                        pixelscale = 10
                     subset_makePNG_optIR.makePNG(outputImage, S2bi, S2bands)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_1284.png'
-                    pixelscale = 10
+
                 elif LSout[:3] == 'LS7' or LSout[:3] == 'LS5':
                     # if this is Landsat 7 or 5
                     LS7bands = ['Blue','Green','Red','NIR','SWIR1','TIR','SWIR2']
@@ -230,6 +240,9 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 #print(means, stddevs)
                 means = np.array(means)
                 stddevs = np.array(stddevs)
+                # truncate to avoid thematic layers etc. in L2A product for Sentinel2
+                means = means[:len(S2bands)]
+                stddevs = stddevs[:len(S2bands)]
                 # output file of subset_makePNG_optIR.makePNG()
                 optPNG = outputImage[:-4]+'_RGB.png'                              
         plottitle = str(lt)+" , "+ str(ln) + " " + gridref.replace("_"," ")
@@ -354,6 +367,7 @@ if __name__ == "__main__":
                         help="Specify the Landsat scene (currently expects projected to OSGB36, unless the UTM has been specified in the -u parameter).")
     parser.add_argument("-u", "--utm", type=str,
                         help="Specify Universal Transverse Mercator zone, e.g. '30N'. Landsat images of GB are in UTM30N (EPSG:32630), or possibly 29N of 31N.")
+    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected Sentinel2 image at 10m resolution with 19 bands (10 image bands).")
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     # Check that the input parameter has been specified.
@@ -376,4 +390,4 @@ if __name__ == "__main__":
         readGRP(groundRefPointsFile,epsg)
     else:
         LandsatScene = args.scene
-        readGRP(groundRefPointsFile, epsg, LandsatScene)
+        readGRP(groundRefPointsFile, epsg, LandsatScene, L2A=args.atmoscorr)
