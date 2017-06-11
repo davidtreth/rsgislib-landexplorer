@@ -167,6 +167,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         # and spectral sampling shapefile 4x4 px
         shp3km = gridref +".shp"
         shp120m = gridref +"_120m.shp"
+        shp40m = gridref +"_40m.shp"
         shpGRP = gridref +"_point.shp"
         if not(LSscene):
         #if True:
@@ -176,6 +177,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             bboxSHP.createpointSHP(xy[0],xy[1],shpGRP,epsg)
             bboxSHP.createbboxSHP(xy[0],xy[1],3000,shp3km,epsg)
             bboxSHP.createbboxSHP(xy[0],xy[1],120,shp120m,epsg)
+            bboxSHP.createbboxSHP(xy[0],xy[1],40,shp40m,epsg)
         if LSscene:
                 import rsgislib
                 from rsgislib import imageutils
@@ -188,10 +190,12 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 outputImage = gridref+".kea"
                 outputImage120m = gridref+"_120m.kea"
                 imageutils.subset(LSscene, shp3km, outputImage, gdalformat, datatype)
-                imageutils.subset(LSscene, shp120m, outputImage120m, gdalformat, datatype)
+
                 pixelscale = 30
                 if LSout[:3] == 'S2A' or LSout[:3] == 'S2B':
                     # Sentinel 2A/2B
+                    outputImage40m = gridref+"_40m.kea"
+                    imageutils.subset(LSscene, shp40m, outputImage40m, gdalformat, datatype)
                     if L2A:
                         # if atmos-corrected stack produced in sencor
                         S2bands = ['B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
@@ -208,11 +212,12 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                         wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 20, 30, 90, 180]
                         pixelscale = 10
                     subset_makePNG_optIR.makePNG(outputImage, S2bi, S2bands)
-                    subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
+                    subset_makePNG_optIR.getSpectrum(outputImage40m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_1284.png'
 
                 elif LSout[:3] == 'LS7' or LSout[:3] == 'LS5':
                     # if this is Landsat 7 or 5
+                    imageutils.subset(LSscene, shp120m, outputImage120m, gdalformat, datatype)
                     LS7bands = ['Blue','Green','Red','NIR','SWIR1','TIR','SWIR2']
                     LS7bi = [1,2,3,4,5,6]
                     wv = [482,563,655,865,1610,2200]
@@ -220,6 +225,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_743.png'
                 elif LSout[:3] == 'LS8':
+                    imageutils.subset(LSscene, shp120m, outputImage120m, gdalformat, datatype)
                     wv = [443,482,563,655,865,1610,2200]
                     subset_makePNG_optIR.makePNG(outputImage)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
@@ -274,14 +280,14 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         ax = plt.subplot(244)
         ax.set_xticks([])
         ax.set_yticks([])
-        imgplot = ax.imshow(imgR)
+        imgplot = ax.imshow(imgR, cmap=plt.get_cmap('Reds'))
         #plottitleR = plottitle + " Red"
         ax.set_title("Red")
         #plt.colorbar()
         ax = plt.subplot(243)
         ax.set_xticks([])
         ax.set_yticks([])
-        imgplot = ax.imshow(imgG)
+        imgplot = ax.imshow(imgG, cmap=plt.get_cmap('Greens'))
         #plottitleG = plottitle + " Green"
         ax.set_title("Green")
         #plt.title(plottitleG)
@@ -289,7 +295,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         ax = plt.subplot(242)
         ax.set_xticks([])
         ax.set_yticks([])
-        imgplot = ax.imshow(imgB)
+        imgplot = ax.imshow(imgB, cmap=plt.get_cmap('Blues'))
         #plottitleB = plottitle + " Blue"
         ax.set_title("Blue")
         #plt.title(plottitleB)
@@ -325,7 +331,20 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             imgplot = ax.imshow(optImg)
             setTickLabelsLS(ax,gridref, pixelscale)
             ax.plot([1500/pixelscale],[1500/pixelscale],color='yellow',alpha=1,marker='+',ms=1)
-            ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
+            ax.plot([(1500-2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale],
+                    [(1500-2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale], color='white')
+
+            #ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
+                
+                
             # SWIR2, NIR and Red band combination
             #IR_Img = mpimg.imread(IR_PNG)
             IR_Img = Image.open(IR_PNG)
@@ -339,10 +358,21 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             imgplot = ax.imshow(IR_Img)
             setTickLabelsLS(ax,gridref, pixelscale)
             ax.plot([1500/pixelscale],[1500/pixelscale],color='yellow',alpha=1,marker='+',ms=1)
-            ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
+            ax.plot([(1500-2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale],
+                    [(1500-2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500+2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale,
+                     (1500-2*pixelscale)/pixelscale], color='white')
+            
+            #ax.plot([1440/pixelscale,1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale],[1440/pixelscale,1560/pixelscale,1560/pixelscale,1440/pixelscale,1440/pixelscale],color='white')
             ax = plt.subplot(248)
             if pixelscale == 10:
-                ax.set_title('Spectrum of Sentinel2 image\nin 120m box around GRP')
+                ax.set_title('Spectrum of Sentinel2 image\nin 40m box around GRP')
             else:
                 ax.set_title('Spectrum of Landsat image\nin 120m box around GRP')
             ax.set_xlabel('wavelength (nm)')
