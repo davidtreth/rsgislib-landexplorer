@@ -169,6 +169,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
         shp120m = gridref +"_120m.shp"
         shpGRP = gridref +"_point.shp"
         if not(LSscene):
+        #if True:
             # currently, if a Landsat scene is specified,
             # don't create the shapefiles - assume they already exist
             # a workaround for my problem with from osgeo import ogr on conda
@@ -317,7 +318,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             # optImg = mpimg.imread(optPNG)
             ax = plt.subplot(246)
             if pixelscale == 10:
-                ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:12]))
+                ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
             else:
                 ax.set_title('RGB Landsat image\n{fn}'.format(fn=LSout[:12]))
             
@@ -332,7 +333,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             IR_Img = np.asarray(IR_Img)
             ax = plt.subplot(247)
             if pixelscale == 10:
-                ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:12]))
+                ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
             else:
                 ax.set_title('Bands 754/743 Landsat image\n{fn}'.format(fn=LSout[:12]))
             imgplot = ax.imshow(IR_Img)
