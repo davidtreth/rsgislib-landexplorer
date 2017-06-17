@@ -248,8 +248,11 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 means = np.array(means)
                 stddevs = np.array(stddevs)
                 # truncate to avoid thematic layers etc. in L2A product for Sentinel2
-                means = means[:len(S2bands)]
-                stddevs = stddevs[:len(S2bands)]
+                try:
+                    means = means[:len(S2bands)]
+                    stddevs = stddevs[:len(S2bands)]
+                except:
+                    pass
                 # output file of subset_makePNG_optIR.makePNG()
                 optPNG = outputImage[:-4]+'_RGB.png'                              
         plottitle = str(lt)+" , "+ str(ln) + " " + gridref.replace("_"," ")
@@ -397,7 +400,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--scene", type=str,
                         help="Specify the Landsat scene (currently expects projected to OSGB36, unless the UTM has been specified in the -u parameter).")
     parser.add_argument("-u", "--utm", type=str,
-                        help="Specify Universal Transverse Mercator zone, e.g. '30N'. Landsat images of GB are in UTM30N (EPSG:32630), or possibly 29N of 31N.")
+                        help="Specify Universal Transverse Mercator zone, e.g. '30N'. Landsat images of GB are in UTM30N (EPSG:32630), or possibly 29N or 31N.")
     parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected Sentinel2 image at 10m resolution with 19 bands (10 image bands).")
     # Call the parser to parse the arguments.
     args = parser.parse_args()

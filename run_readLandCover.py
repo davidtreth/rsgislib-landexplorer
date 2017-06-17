@@ -5,6 +5,7 @@
 # and then source the miniconda envvars to do the stuff using rsgislib
 import subprocess
 import argparse
+import sys
 # change the below to the path and envvars file
 miniconda = '~/.minicondaenvvar'
 pathto_script = '~/ioSafeBackup/Python_stuff/bitbucket/rsgislib-landexplorer/readLandCoverGRPs.py'
