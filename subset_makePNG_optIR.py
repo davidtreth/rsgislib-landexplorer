@@ -41,7 +41,8 @@ def makePNG(inputStack,bands=[1,2,3,4,5,6,7],bnames=LS8bands,datatype=rsgislib.T
         # set saveoutstats=True,ignorezeros=True,onepassd=False 
         rsgislib.imageutils.stretchImage(tempFile, stretchFile, True,
                                          statsFile, True, False, 'KEA',
-                                         rsgisType_o, stretchType, nsigma)    
+                                         rsgisType_o, stretchType, nsigma)
+
     # bands 432 (if LS8)
     outTIFFile = inputStack[:-4] + "_RGB.tif"
     outPNGFile = inputStack[:-4] + "_RGB.png"

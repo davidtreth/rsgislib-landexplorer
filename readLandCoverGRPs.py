@@ -102,7 +102,7 @@ def findOSgridref(X,Y,nfig=6):
     easting, northing = int((X % 100000)/denom), int((Y % 100000)/denom)
     return gridsq, easting, northing
 
-def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplots/", L2A=False):
+def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplots/", L2A=False, B8Aord=False):
     """ take the list of ground reference points and their associated image files
     and make some plots """
     # print(epsg)
@@ -191,6 +191,7 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                 outputImage120m = gridref+"_120m.kea"
                 imageutils.subset(LSscene, shp3km, outputImage, gdalformat, datatype)
 
+
                 pixelscale = 30
                 if LSout[:3] == 'S2A' or LSout[:3] == 'S2B':
                     # Sentinel 2A/2B
@@ -204,15 +205,25 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                         wv = [490, 560, 665, 705, 740, 783, 842, 865, 1610, 2190]
                         wv_w = [65, 35, 30, 15, 15, 20, 115, 20, 90, 180]
                         pixelscale = 10
-                    else:
+                    elif B8Aord:
+                        S2bands = ['B1Coastal', 'B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
+                                   'B8NIR842', 'B8A865nm', 'B9WaterVap945', 'B11SWIR1610', 'B12SWIR2190']
+
+                        S2bi = [1,2,3,4,5,6,7,8, 9,10,11,12]
+                        wv = [443, 490, 560, 665, 705, 740, 783, 842, 865, 940, 1610, 2190]
+                        wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 30, 90, 180]
+                        pixelscale = 10                        
+                    else:                        
                         S2bands = ['B1Coastal', 'B2Blue', 'B3Green', 'B4Red', 'B5NIR705', 'B6NIR740', 'B7NIR783',
                                    'B8NIR842', 'B9WaterVap945', 'B10Cirrus1375', 'B11SWIR1610', 'B12SWIR2190', 'B8A865nm']
                         S2bi = [1,2,3,4,5,6,7,8, 13, 9,10,11,12]
                         wv = [443, 490, 560, 665, 705, 740, 783, 842, 865, 940, 1375, 1610, 2190]
                         wv_w = [20, 65, 35, 30, 15, 15, 20, 115, 20, 20, 30, 90, 180]
                         pixelscale = 10
+                    imageutils.setBandNames(outputImage, S2bands)
                     subset_makePNG_optIR.makePNG(outputImage, S2bi, S2bands)
                     subset_makePNG_optIR.getSpectrum(outputImage40m, shpGRP)
+                                    
                     IR_PNG = outputImage[:-4]+'_1284.png'
 
                 elif LSout[:3] == 'LS7' or LSout[:3] == 'LS5':
@@ -221,12 +232,14 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
                     LS7bands = ['Blue','Green','Red','NIR','SWIR1','TIR','SWIR2']
                     LS7bi = [1,2,3,4,5,6]
                     wv = [482,563,655,865,1610,2200]
+                    imageutils.setBandNames(outputImage, LS7bands)
                     subset_makePNG_optIR.makePNG(outputImage,LS7bi,LS7bands)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_743.png'
                 elif LSout[:3] == 'LS8':
                     imageutils.subset(LSscene, shp120m, outputImage120m, gdalformat, datatype)
                     wv = [443,482,563,655,865,1610,2200]
+                    imageutils.setBandNames(outputImage, LS7bands)
                     subset_makePNG_optIR.makePNG(outputImage)
                     subset_makePNG_optIR.getSpectrum(outputImage120m, shpGRP)
                     IR_PNG = outputImage[:-4]+'_754.png'
@@ -401,7 +414,8 @@ if __name__ == "__main__":
                         help="Specify the Landsat scene (currently expects projected to OSGB36, unless the UTM has been specified in the -u parameter).")
     parser.add_argument("-u", "--utm", type=str,
                         help="Specify Universal Transverse Mercator zone, e.g. '30N'. Landsat images of GB are in UTM30N (EPSG:32630), or possibly 29N or 31N.")
-    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected Sentinel2 image at 10m resolution with 19 bands (10 image bands).")
+    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected in sen2cor within SNAP toolbox Sentinel2 image at 10m resolution with 19 bands (10 image bands). If it is a Level 2 product downloaded from Copernicus in that form and only resampled to 10m, don't use this switch.")
+    parser.add_argument("-b8", "--band8Aorder", action="store_true", default=False, help="Specify whether it is a Level 2 product downloaded from Copernicus in that form and only resampled (not atmosphere corrected by the user) to 10m, with band8A between band 8 and 9 rather than at the end (which happened when building stacks previously due to filenames containing B07, B08, B11 , B8A.")    
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     # Check that the input parameter has been specified.
@@ -424,4 +438,4 @@ if __name__ == "__main__":
         readGRP(groundRefPointsFile,epsg)
     else:
         LandsatScene = args.scene
-        readGRP(groundRefPointsFile, epsg, LandsatScene, L2A=args.atmoscorr)
+        readGRP(groundRefPointsFile, epsg, LandsatScene, L2A=args.atmoscorr, B8Aord=args.band8Aorder)
