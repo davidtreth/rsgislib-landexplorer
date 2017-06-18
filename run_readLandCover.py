@@ -25,7 +25,9 @@ if __name__ == "__main__":
                         help="optional argument to extract geotags from image files into input file first")
     parser.add_argument("--makepng", action="store_true",
                         help="optional argument to make reduced size pngs from any jpgs in the directory first.")
-    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected Sentinel2 image at 10m resolution with 19 bands (10 image bands).")
+    parser.add_argument("-a", "--atmoscorr", action="store_true", default=False, help="Specify whether it is an atmospheric corrected in sen2cor within SNAP toolbox Sentinel2 image at 10m resolution with 19 bands (10 image bands). If it is a Level 2 product downloaded from Copernicus in that form and only resampled to 10m, don't use this switch.")
+    parser.add_argument("-b8", "--band8Aorder", action="store_true", default=False, help="Specify whether it is a Level 2 product downloaded from Copernicus in that form and only resampled (not atmosphere corrected by the user) to 10m, with band8A between band 8 and 9 rather than at the end (which happened when building stacks previously due to filenames containing B07, B08, B11 , B8A.")
+
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     # Check that the input parameter has been specified.
@@ -37,12 +39,16 @@ if __name__ == "__main__":
         cmd1 = "python {readLpath} -i {coord} -u {utm}".format(coord=args.input, utm=args.utm, readLpath = pathto_script)
         if args.atmoscorr:
             cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm} -a".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
+        elif args.band8Aorder:
+            cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm} -b8".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
         else:
             cmd2 = "python {readLpath} -i {coord} -s {scene} -u {utm}".format(coord=args.input, scene=args.scene, utm=args.utm, readLpath = pathto_script)
     else:
         cmd1 = "python {readLpath}  -i {coord}".format(coord=args.input)
         if args.atmoscorr:
             cmd2 = "python {readLpath}  -i {coord} -s {scene} -a".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
+        elif args.band8Aorder:
+            cmd2 = "python {readLpath}  -i {coord} -s {scene} -b8".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
         else:
             cmd2 = "python {readLpath}  -i {coord} -s {scene}".format(coord=args.input, scene=args.scene, readLpath = pathto_script)
     
