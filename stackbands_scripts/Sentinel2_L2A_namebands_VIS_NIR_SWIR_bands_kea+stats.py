@@ -57,11 +57,14 @@ dirFileList = os.listdir(directory)
 
 tifFileList = [f for f in dirFileList if (f[-4:].lower() in ['.tif', '.kea'])]
 
-bands = "B23456788a1112"
-bandNamesList = ["B2Blue490nm", "B3Green560nm", "B4Red665nm",
-                 "B5NIR705nm", "B6NIR740nm", "B7NIR783nm", "B8NIR_broad842nm", "B8A_NIR865nm",
-                 "B11_SWIR1610nm", "B12_SWIR2190nm",
-                 "AOT", "WVP", "Cloud", "Snow", "SceneClass"]
+#bands = "B23456788a1112"
+bandNamesList = ["B1Coast443nm", "B2Blue490nm", "B3Green560nm", "B4Red665nm",
+                 "B5NIR705nm", "B6NIR740nm", "B7NIR783nm", "B8NIR_broad842nm",
+                 "B8A_NIR865nm", "B11_SWIR1610nm", "B12_SWIR2190nm"]
+# this is intended for the product downloaded as the Level 2A atmosphere corrected
+# and resampled to 10m within Sentinel Toolbox
+# to do, make sure it is clear what order the rest of the bands are in before including
+#                "#WVP", "AOT", "SceneClass", "Cloud", "Snow"]
 bandInts = [i+1 for i in range(len(bandNamesList))]
 
 for infile in tifFileList:
@@ -76,15 +79,16 @@ for infile in tifFileList:
 
 
     #output file name
-    outputImage = fileNameBase + '_'+bands+'_stack.kea'
+    # outputImage = fileNameBase + '_'+bands+'_stack.kea'
 
     #output format (GDAL code)
     outFormat = 'KEA'
     outType = rsgislib.TYPE_32UINT
 
     # select bands using rsgislib 
-    rsgislib.imageutils.selectImageBands(inputImage, outputImage, outFormat, outType, bandInts)
-    rsgislib.imageutils.setBandNames(outputImage, bandNamesList)
+    #rsgislib.imageutils.selectImageBands(inputImage, outputImage, outFormat, outType, bandInts)
+    # instead of creating new image, set band names in this image
+    rsgislib.imageutils.setBandNames(inputImage, bandNamesList)
     # stats and pyramids
-    rsgislib.imageutils.popImageStats(outputImage,True,0.,True)
+    rsgislib.imageutils.popImageStats(inputImage,True,0.,True)
 
