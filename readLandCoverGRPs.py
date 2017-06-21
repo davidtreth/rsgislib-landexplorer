@@ -340,7 +340,8 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             # optImg = mpimg.imread(optPNG)
             ax = plt.subplot(246)
             if pixelscale == 10:
-                ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
+                #ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
+                ax.set_title('RGB Sentinel2 image\n{fn}'.format(fn=LSout[:25]))
             else:
                 ax.set_title('RGB Landsat image\n{fn}'.format(fn=LSout[:12]))
             
@@ -368,7 +369,8 @@ def readGRP(groundRefPointsFile, epsg, LSscene = None, plotsOutPath = "outputplo
             IR_Img = np.asarray(IR_Img)
             ax = plt.subplot(247)
             if pixelscale == 10:
-                ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
+                #ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:19]))
+                ax.set_title('Bands 12/8/4 Sentinel2 image\n{fn}'.format(fn=LSout[:25]))
             else:
                 ax.set_title('Bands 754/743 Landsat image\n{fn}'.format(fn=LSout[:12]))
             imgplot = ax.imshow(IR_Img)
