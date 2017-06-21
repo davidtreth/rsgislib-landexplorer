@@ -1,12 +1,14 @@
-# David Trethewey 01-06-2016
+# David Trethewey
 #
-# Sentinel2 Bands Stacker
+# Sentinel2 Band labeller
 # Uses visible, NIR, SWIR bands
 # 
 # Assumptions:
 #
-# the image has been processed in SNAP / sen2cor
-# and resampled to a 10m file as a GeoTIFF or KEA (after using gdal_translate to
+# the image has been been downloaded as a Level2 atmosphere corrected image
+# from scihub.copernicus.eu/dhus/processed
+# and resampled in Sentinel Toolbox to a 10m resolution file as a GeoTIFF
+# or KEA (after using gdal_translate to
 # convert the rather enormous GeoTIFF that comes out of resampling the Level 2A product
 #
 # assume that this file is in the directory
@@ -15,22 +17,23 @@
 # there is only one Sentinel2 scene in the directory
 # and no other .tif or .kea files
 #  
-# take the 1st 15 bands which are (I think):
-# 1 = B2 (blue 490nm)
-# 2 = B3 (green 560nm)
-# 3 = B4 (red 665nm)
-# 4 = B5 (red edge 705nm)
-# 5 = B6 (red edge 740nm)
-# 6 = B7 (red edge 783nm)
-# 7 = B8 (NIR broadband 842nm)
-# 6 = B8a (NIR narrowband 865nm)
-# 9 = B11 (SWIR 1610nm)
-# 10 = B12 (SWIR 2190nm)
-# 11 = AOT
-# 12 = WVP
-# 13 = cloud
-# 14 = snow
-# 15 = sceneclassification
+# take the 1st 11 bands which are:
+# 1 = B1 (coastal 443nm)
+# 2 = B2 (blue 490nm)
+# 3 = B3 (green 560nm)
+# 4 = B4 (red 665nm)
+# 5 = B5 (red edge 705nm)
+# 6 = B6 (red edge 740nm)
+# 7 = B7 (red edge 783nm)
+# 8 = B8 (NIR broadband 842nm)
+# 9 = B8a (NIR narrowband 865nm)
+# 10 = B11 (SWIR 1610nm)
+# 11 = B12 (SWIR 2190nm)
+
+# there are other bands for things like AOT (optical thickness),  WVP (water vapour %)
+# cloud probability, snow probability
+# scenecclassification etc. but I need to be careful about ordering
+# so don't label them yet
 
 # imports
 import rsgislib
